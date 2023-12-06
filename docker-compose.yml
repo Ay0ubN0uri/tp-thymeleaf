@@ -1,0 +1,51 @@
+version: "3.8"
+
+services:
+  #service 1: definition of mysql database
+  db:
+    image: mysql
+    container_name: mysqldb
+    environment:
+      - MYSQL_ROOT_PASSWORD=ayoub
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      retries: 10
+      interval: 3s
+      timeout: 30s
+    restart: always
+
+  #service 2: definition of phpMyAdmin
+  phpmyadmin:
+    image: phpmyadmin
+    container_name: my-php-myadmin
+    ports:
+      - "8082:80"
+    restart: always
+
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ayoub
+
+  #service 3: definition of your spring-boot app
+  tpthymeleaf: #it is just a name, which will be used only in this file.
+    image: tp-thymeleaf #name of the image after dockerfile executes
+    container_name: tp-thymeleaf-app #name of the container created from docker image
+    build:
+      context: . #docker file path (. means root directory)
+      dockerfile: Dockerfile #docker file name
+    ports:
+      - "8084:8080" #docker containter port with your os port
+    restart: always
+
+    depends_on:
+      db:
+        condition: service_healthy
+    # environment:
+    #   SPRING_DATASOURCE_URL: jdbc:mysql://mysqldb:3306/tpthymeleaf?createDatabaseIfNotExist=true
+    #   SPRING_DATASOURCE_USERNAME: root
+    #   SPRING_DATASOURCE_PASSWORD: ayoub
